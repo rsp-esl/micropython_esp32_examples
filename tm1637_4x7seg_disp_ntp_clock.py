@@ -46,9 +46,11 @@ def get_ntp_time( ntp_host, ntp_port=123, timeout=5 ):
     return seconds
 
 def set_rtc( tm ):
+    # time.struct_time
     year, month, day, hour, min, sec, wday, yday = tm
     print( year, month, day, hour, min, sec, wday, yday )
-    RTC().datetime( (tm[0],tm[1],tm[2],tm[6]+1,tm[3],tm[4],tm[5],0) )
+	# (year, month, day, weekday, hours, minutes, seconds, sub-seconds)
+    RTC().datetime( (tm[0],tm[1],tm[2],tm[6],tm[3],tm[4],tm[5],0) )
 
 def show_digital_clock(disp):
     cnt = 0
