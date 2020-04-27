@@ -1,5 +1,5 @@
 # file: tm1640_demo.py
-# date: 2020-04-24
+# date: 2020-04-27
 
 from machine import Pin, RTC
 from micropython import const
@@ -20,6 +20,7 @@ try:
         wifi_config = json.load(f)
 except OSError:
     print('Cannot open configuration file')
+
 def connect_wifi( wifi_cfg, retries=10 ):
     wlan = network.WLAN(network.STA_IF)
     wlan.active(True)
@@ -79,7 +80,8 @@ try:
     while True:
         # read current datetime from RTC
         tm = rtc.datetime()
-        hour, minute = tm[4]+7, tm[5]
+        tz_offset = +7
+        hour, minute = (tm[4]+tz_offset) % 24, tm[5]
         disp.write( DIGITS[hour//10], 0 )
         disp.write( DIGITS[hour%10],  4 )
         disp.write( [0x14], 7 ) # show colon
@@ -88,11 +90,9 @@ try:
         time.sleep_ms(500)
         disp.write( [0x00], 7 ) # clear colon
         time.sleep_ms(500)
-        
+     
 except KeyboardInterrupt:
     pass
 finally:
     disp.clear()
     print('Done')
-
-
