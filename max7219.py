@@ -1,5 +1,5 @@
-# file: max7219.py
-# date: 2020-04-28
+# File: max7219.py
+# Date: 2020-05-26
 
 from micropython import const 
 from machine import Pin, SPI
@@ -12,24 +12,25 @@ class MAX7219():
     REG_SCAN_LIMIT   = const(0xB)
     REG_SHUTDOWN     = const(0xC)
     REG_DISP_TEST    = const(0xF)
-
-    def __init__( self, spi, cs ):
-        self._spi = spi
-        self._cs  = cs
+    
+    def __init__( self, spi, cs, n=1 ):
+        self._spi = spi # spi bus
+        self._cs  = cs  # cs pin
+        self._n   = n   # number of blocks
         self.init()
-
+        
     def init( self ):
         # decode mode: no decode for digits 0-7
-        self.write( REG_DECODE_MODE, 0 )
+        self.write( REG_DECODE_MODE, self._n*[0] )
         # set intensity: 0x7 = 15/32, 0xf = 31/32
-        self.write( REG_INTENSITY, 0xf )
+        self.write( REG_INTENSITY, self._n*[0xf] )
         # scan limit: display digits 0-7
-        self.write( REG_SCAN_LIMIT, 7 )
+        self.write( REG_SCAN_LIMIT, self._n*[7] )
         # display test: normal (no display test)
-        self.write( REG_DISP_TEST, 0 ) 
+        self.write( REG_DISP_TEST, self._n*[0] ) 
         # shutdown: normal operation (no shutdown)
-        self.write( REG_SHUTDOWN, 1 )
-
+        self.write( REG_SHUTDOWN, self._n*[1] )
+        
     def write( self, reg, data ):
         if isinstance(data, int):
             data = [data]
@@ -37,29 +38,26 @@ class MAX7219():
         buf = []
         for i in range(n):
             buf += [reg, data[i]]
-        self._cs.value(0) 
-        self._spi.write( bytearray(buf) )
-        self._cs.value(1)
-
-    def clear( self, n=1 ):
+        self._cs.value(0) # assert CS pin 
+        self._spi.write( bytearray(buf) ) # write SPI data
+        self._cs.value(1) # deassert CS pin
+        
+    def clear( self ):
         for i in range(8):
-            self.write( REG_DIGIT_BASE+i, n*[0] )
-    
+            self.write( REG_DIGIT_BASE+i, self._n*[0] )
+            
     def on( self ):
-        self.write( REG_SHUTDOWN, 1 )
-
+        self.write( REG_SHUTDOWN, self._n*[1] )
+        
     def off( self ):
-        self.write( REG_SHUTDOWN, 0 )
-
+        self.write( REG_SHUTDOWN, self._n*[0] )
+        
     def flashing( self, times, delay_ms=100 ):
         for i in range(times):
-            self.write( REG_DISP_TEST, 1 )
+            self.write( REG_DISP_TEST, self._n*[1] )
             time.sleep_ms( delay_ms )
-            self.write( REG_DISP_TEST, 0 )
+            self.write( REG_DISP_TEST, self._n*[0] )
             time.sleep_ms( delay_ms )
-
+            
     def deinit( self ):
         self._spi.deinit()
-        del self._spi
-
-
