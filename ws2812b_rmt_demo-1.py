@@ -27,8 +27,6 @@ try:
         for bits in COLORS:
             # send data to RMT
             rmt.write_pulses( bits, start=1)
-            # wait until RMT done
-            rmt.wait_done()
             time.sleep(1.0)
 except KeyboardInterrupt:
     print('Terminated...')
